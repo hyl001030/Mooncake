@@ -7,7 +7,7 @@
 #include <transport/device/device_ops.cuh>
 
 #include "device_comm/device_utils/d2h_request_slot.cuh"
-#include "device_comm/device_utils/device_assert.cuh"
+#include "pg_assert.h"
 #include "device_comm/device_transfer/transfer_types.cuh"
 #include "device_comm/device_transfer/routes/host_proxy_route/host_proxy_types.cuh"
 
@@ -17,9 +17,9 @@ class HostProxyTransferTicket {
    public:
     __device__ __forceinline__ HostProxyTransferTicket() = default;
 
-    __device__ __forceinline__ HostProxyTransferTicket(
-        HostProxyCommandSlot::RequestHandle handle, uint64_t start_ticks,
-        uint64_t timeout_ticks)
+    __device__ __forceinline__
+    HostProxyTransferTicket(HostProxyCommandSlot::RequestHandle handle,
+                            uint64_t start_ticks, uint64_t timeout_ticks)
         : handle_(handle),
           start_ticks_(start_ticks),
           timeout_ticks_(timeout_ticks) {}
@@ -59,8 +59,8 @@ static __device__ __noinline__ HostProxyTransferTicket hostProxyPut(
     // ticket state to the CTA.
     if (block.thread_rank() != 0) return {};
 
-    PG_DEVICE_ASSERT(context.command_slots && lane < kTransferLaneCount &&
-                     route.remote_region_address != 0);
+    PG_ASSERT(context.command_slots && lane < kTransferLaneCount &&
+              route.remote_region_address != 0);
     auto* const slot = context.command_slots + lane;
     const uint64_t start_ticks = clock64();
 
@@ -99,10 +99,10 @@ HostProxyTransferTicket::waitLeader() const {
         case HostProxyCommandResult::Failed:
             return TransferResult::Failed;
         case HostProxyCommandResult::Pending:
-            PG_DEVICE_UNREACHABLE();
+            PG_UNREACHABLE();
             return TransferResult::Failed;
     }
-    PG_DEVICE_UNREACHABLE();
+    PG_UNREACHABLE();
     return TransferResult::Failed;
 }
 
